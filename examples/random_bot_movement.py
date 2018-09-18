@@ -1,4 +1,4 @@
-from server import Server
+from pyrts import Server
 import json
 from collections import defaultdict
 from random import randint
@@ -9,6 +9,7 @@ class AI(Server):
         super(AI, self).__init__()
 
     def get_action(self, state):
+
         unit_by_player = defaultdict(list)
         for unit in state['pgs']['units']:
             unit_by_player[unit['player']].append(unit)
@@ -31,3 +32,9 @@ class AI(Server):
 
         return [test_action]
 
+
+ai = AI()
+
+if __name__ == "__main__":
+    print("server is running")
+    ai.start()
