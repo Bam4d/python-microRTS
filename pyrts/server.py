@@ -7,7 +7,7 @@ class Server(object):
 
     def __init__(self):
         logging.basicConfig()
-        self._logger = logging.getLogger("RTSServer")
+        self._logger = logging.getLogger('RTSServer')
         self._logger.setLevel(logging.DEBUG)
 
         self._s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -28,40 +28,50 @@ class Server(object):
         environment_message = self._connection.recv(4096).decode('utf-8')
         if environment_message[0] == u'\n':
             return ('ACK')
-        self._logger.debug("Message: %s" % environment_message)
+        self._logger.debug('Message: %s' % environment_message)
         message_parts = environment_message.split('\n')
         self._logger.debug(message_parts[0])
         return message_parts
 
     def _filter_invalid_actions(self, actions, state):
-        """
+        '''
         Get the units that are currently performing actions from the state and remove any actions that refer to these
         units
         :return: A filtered list of all the actions that can be applied
-        """
+        '''
         busy_units = self.get_busy_units(state)
         return [action for action in actions if action['unitID'] not in busy_units]
 
-    def get_action(self, state):
-        """
+    def get_action(self, state, gameover):
+        '''
         To be implemented by a syper class
         :param state:
         :return:
-        """
+        '''
         pass
 
-    def _process_state_and_get_action(self, state):
-        actions = self.get_action(state)
+    def _process_state_and_get_action(self, state, gameover):
+        actions = self.get_action(state, gameover)
 
-        return self._filter_invalid_actions(actions, state)
+        if gameover:
+            return None
+        else:
+            return self._filter_invalid_actions(actions, state)
+
 
     def _wait_for_get_action(self):
         message_parts = self._wait_for_message()
 
-        state = json.loads(message_parts[1])
-        self._logger.debug("state: %s" % state)
+        if message_parts[0] == 'getAction':
 
-        return self._process_state_and_get_action(state)
+            state = json.loads(message_parts[1])
+            self._logger.debug('state: %s' % state)
+            gameover = False
+        else:
+            gameover = True
+            state = {}
+
+        return self._process_state_and_get_action(state, gameover)
 
     def _get_budgets(self):
         _, self._time_budget, self._iteration_budget = self._wait_for_message()[0].split()
@@ -87,20 +97,20 @@ class Server(object):
         if unit['canMove']:
             available_actions.append([
                 {  # UP
-                    "type": 1,
-                    "parameter": 0
+                    'type': 1,
+                    'parameter': 0
                 },
                 {  # RIGHT
-                    "type": 1,
-                    "parameter": 1
+                    'type': 1,
+                    'parameter': 1
                 },
                 {  # DOWN
-                    "type": 1,
-                    "parameter": 2
+                    'type': 1,
+                    'parameter': 2
                 },
                 {  # LEFT
-                    "type": 1,
-                    "parameter": 3
+                    'type': 1,
+                    'parameter': 3
                 }
             ])
         # canAttack
@@ -112,20 +122,20 @@ class Server(object):
         if unit['canHarvest']:
             available_actions.append([
                 {  # UP
-                    "type": 2,
-                    "parameter": 0
+                    'type': 2,
+                    'parameter': 0
                 },
                 {  # RIGHT
-                    "type": 2,
-                    "parameter": 1
+                    'type': 2,
+                    'parameter': 1
                 },
                 {  # DOWN
-                    "type": 2,
-                    "parameter": 2
+                    'type': 2,
+                    'parameter': 2
                 },
                 {  # LEFT
-                    "type": 2,
-                    "parameter": 3
+                    'type': 2,
+                    'parameter': 3
                 }
             ])
 
@@ -164,15 +174,21 @@ class Server(object):
         self._get_budgets()
         self._get_utt()
 
+        gameover = False
+
         try:
-            while 1:
+            while not gameover:
                 action = self._wait_for_get_action()
-                self._logger.debug('sending action %s' % action)
-                self._send(action)
+                if action is not None:
+                    self._logger.debug('Sending action %s' % action)
+                    self._send(action)
+                else:
+                    self._logger.debug('Game has ended')
+                    gameover = True
         except Exception as msg:
             self._connection.close()
             self._s.close()
-            raise msg
+            raise msg.message
 
 
         self._s.close()

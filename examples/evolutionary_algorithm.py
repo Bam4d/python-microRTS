@@ -16,7 +16,10 @@ class AI(Server):
         return [unit for unit in units if unit['type'] == type]
 
 
-    def get_action(self, state):
+    def get_action(self, state, gameover):
+
+        if gameover:
+            return []
 
         unit_type_table = self.get_unit_type_table()
 
@@ -34,15 +37,15 @@ class AI(Server):
         units = unit_by_player[0]
         busy_units = self.get_busy_units(state)
         available_units = [unit for unit in units if unit['ID'] not in busy_units]
-        available_workers = self.get_unit_by_type(available_units, "Worker")
-        available_bases = self.get_unit_by_type(available_units, "Base")
+        available_workers = self.get_unit_by_type(available_units, 'Worker')
+        available_bases = self.get_unit_by_type(available_units, 'Base')
 
-        available_worker_actions = self.get_available_actions_by_type(unit_type_table, "Worker")
+        available_worker_actions = self.get_available_actions_by_type(unit_type_table, 'Worker')
         for worker in available_workers:
             # Assign a random action
             actions.append({'unitID': worker['ID'], 'unitAction': random.choice(available_worker_actions)})
 
-        available_base_actions = self.get_available_actions_by_type(unit_type_table, "Base")
+        available_base_actions = self.get_available_actions_by_type(unit_type_table, 'Base')
         for base in available_bases:
             # Assign a random action
             actions.append({'unitID': base['ID'], 'unitAction': random.choice(available_base_actions)})
@@ -52,6 +55,6 @@ class AI(Server):
 
 ai = AI()
 
-if __name__ == "__main__":
-    print("server is running")
+if __name__ == '__main__':
+    print('server is running')
     ai.start()

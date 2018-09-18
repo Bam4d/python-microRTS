@@ -35,6 +35,6 @@ class AI(Server):
 
 ai = AI()
 
-if __name__ == "__main__":
-    print("server is running")
+if __name__ == '__main__':
+    print('server is running')
     ai.start()
