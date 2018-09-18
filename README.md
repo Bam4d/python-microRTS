@@ -62,6 +62,14 @@ by the `get_action` method that are currently performing a previous action.
 
 ### Useful functions in the Server class
 
+#### get_busy_units(units)
+
+Get a list of the units that are currently busy performing an action
+
+#### get_available_actions_by_type(unit_type_table, type)
+
+Given the unit type and the unit type table, return a complete list of the possible actions that unit can perform
+
 #### get_unit_type_table()
 
 This function returns the unit type table, which describes the environment.
