@@ -3,6 +3,16 @@ import socket
 import sys
 import json
 
+NONE =-1
+MOVE = 1
+HARVEST = 2
+PRODUCE = 4
+
+UP = 0
+RIGHT = 1
+DOWN = 2
+LEFT = 3
+
 class Server(object):
 
     def __init__(self):
@@ -11,6 +21,10 @@ class Server(object):
         self._logger.setLevel(logging.DEBUG)
 
         self._s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+        self._max_x = 16
+        self._max_y = 16
 
 
     def _ack(self):
@@ -62,7 +76,8 @@ class Server(object):
     def _wait_for_get_action(self):
         message_parts = self._wait_for_message()
 
-        if message_parts[0] == 'getAction':
+        command = message_parts[0].split()
+        if command[0] == 'getAction':
 
             state = json.loads(message_parts[1])
             self._logger.debug('state: %s' % state)
@@ -88,62 +103,145 @@ class Server(object):
     def get_busy_units(self, state):
         return [unit['ID'] for unit in state['actions']]
 
-    def get_available_actions_by_type(self, unit_type_table, type):
+    def _get_unavailable_move_positions(self, state):
+        return set((unit['x'], unit['y']) for unit in state['pgs']['units'])
+
+    def _get_available_harvest_positions(self, state):
+        return set((unit['x'], unit['y']) for unit in state['pgs']['units'] if unit['type'] == "Resource")
+
+    def get_valid_actions_for_unit(self, unit, available_actions, state):
+        """
+        Get the actions that are valid for a unit to perform.
+
+        An action is INVALID if the action cannot be performed in the environment.
+
+        For example, if the action is MOVE(left) but the position to the left of the unit is blocked
+
+        :param unit:
+        :param available_actions:
+        :param state:
+        :return:
+        """
+
+        unavailable_move_positions = self._get_unavailable_move_positions(state)
+        available_harvest_positions = self._get_available_harvest_positions(state)
+
+        valid_actions = []
+
+        self._logger.info('unit position [%d, %d]' % (unit['x'], unit['y']))
+
+        # For all the actions make sure that those actions are possible
+        for action in available_actions:
+            if action['type'] == MOVE:
+                position = self.get_action_position(action, unit)
+
+                if self._is_on_grid(position) and position not in unavailable_move_positions:
+                    self._logger.info(position)
+                    valid_actions.append(action)
+                self._logger.info(valid_actions)
+
+            if action['type'] == HARVEST:
+                position = self.get_action_position(action, unit)
+
+                if self._is_on_grid(position) and position in available_harvest_positions:
+                    valid_actions.append(action)
+
+            if action['type'] == PRODUCE:
+                position = self.get_action_position(action, unit)
+
+                # Unavailable produce positions are the same as unavailable move positions
+                if self._is_on_grid(position) and position not in unavailable_move_positions:
+                    valid_actions.append(action)
+
+        return valid_actions
+
+    def get_action_position(self, action, unit):
+        position = None
+        if action['parameter'] == UP:
+            position = (unit['x'], unit['y'] + 1)
+        if action['parameter'] == RIGHT:
+            position = (unit['x'] + 1, unit['y'])
+        if action['parameter'] == DOWN:
+            position = (unit['x'], unit['y'] - 1)
+        if action['parameter'] == LEFT:
+            position = (unit['x'] - 1, unit['y'])
+        assert position is not None
+        return position
+
+    def _is_on_grid(self, position):
+        return position[0] > 0 and \
+               position[1] > 0 and \
+               position[0] < self._max_x and \
+               position[1] < self._max_y
+
+    def get_available_actions_by_type_name(self, unit_type_table, type_name):
         available_actions = []
 
-        unit = unit_type_table['unitTypes'][type]
+        # Get unit type by type name
+        unit_type = [unit for unit in unit_type_table['unitTypes'] if unit['name'] == type_name][0]
 
         # canMove
-        if unit['canMove']:
-            available_actions.append([
+        if unit_type['canMove']:
+            available_actions.extend([
                 {  # UP
-                    'type': 1,
-                    'parameter': 0
+                    'type': MOVE,
+                    'parameter': UP
                 },
                 {  # RIGHT
-                    'type': 1,
-                    'parameter': 1
+                    'type': MOVE,
+                    'parameter': RIGHT
                 },
                 {  # DOWN
-                    'type': 1,
-                    'parameter': 2
+                    'type': MOVE,
+                    'parameter': DOWN
                 },
                 {  # LEFT
-                    'type': 1,
-                    'parameter': 3
+                    'type': MOVE,
+                    'parameter': LEFT
                 }
             ])
         # canAttack
-        if unit['canAttack']:
+        if unit_type['canAttack']:
             # This is more complicated because the params have x-y coordinates and a range
             pass
 
         # canHarvest
-        if unit['canHarvest']:
-            available_actions.append([
+        if unit_type['canHarvest'] and False:
+            available_actions.extend([
                 {  # UP
-                    'type': 2,
-                    'parameter': 0
+                    'type': HARVEST,
+                    'parameter': UP
                 },
                 {  # RIGHT
-                    'type': 2,
-                    'parameter': 1
+                    'type': HARVEST,
+                    'parameter': RIGHT
                 },
                 {  # DOWN
-                    'type': 2,
-                    'parameter': 2
+                    'type': HARVEST,
+                    'parameter': DOWN
                 },
                 {  # LEFT
-                    'type': 2,
-                    'parameter': 3
+                    'type': HARVEST,
+                    'parameter': LEFT
                 }
             ])
 
         # If this unit can produce anything
-        if len(unit['produces']) > 0:
-            available_actions.append([
-                {'type': 4, 'unitType': unit_type } for unit_type in unit['produces']
+        if len(unit_type['produces']) > 0 and False:
+            available_actions.extend([
+                {'type': PRODUCE, 'unitType': unit_type_name,'parameter': UP } for unit_type_name in unit_type['produces']
             ])
+            available_actions.extend([
+                {'type': PRODUCE, 'unitType': unit_type_name, 'parameter': RIGHT} for unit_type_name in unit_type['produces']
+            ])
+            available_actions.extend([
+                {'type': PRODUCE, 'unitType': unit_type_name, 'parameter': DOWN} for unit_type_name in unit_type['produces']
+            ])
+            available_actions.extend([
+                {'type': PRODUCE, 'unitType': unit_type_name, 'parameter': LEFT} for unit_type_name in unit_type['produces']
+            ])
+
+        return available_actions
 
     def start(self):
         self._logger.debug('Socket created')
@@ -176,19 +274,14 @@ class Server(object):
 
         gameover = False
 
-        try:
-            while not gameover:
-                action = self._wait_for_get_action()
-                if action is not None:
-                    self._logger.debug('Sending action %s' % action)
-                    self._send(action)
-                else:
-                    self._logger.debug('Game has ended')
-                    gameover = True
-        except Exception as msg:
-            self._connection.close()
-            self._s.close()
-            raise msg.message
+        while not gameover:
+            action = self._wait_for_get_action()
+            if action is not None:
+                self._logger.debug('Sending action %s' % action)
+                self._send(action)
+            else:
+                self._logger.debug('Game has ended')
+                gameover = True
 
 
         self._s.close()
