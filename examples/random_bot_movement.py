@@ -4,6 +4,9 @@ from collections import defaultdict
 from random import randint
 
 class AI(Server):
+    """
+    Finds a single worker and moves it randomly
+    """
 
     def __init__(self):
         super(AI, self).__init__()

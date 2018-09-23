@@ -114,10 +114,10 @@ class Server(object):
         return set([(unit['x'], unit['y']) for unit in state['pgs']['units'] if unit['type'] == "Resource"])
 
     def _get_valid_base_positions(self, state):
-        return set([(unit['x'], unit['y']) for unit in state['pgs']['units'] if unit['type'] == "Base" and unit['player'] is PLAYER])
+        return set([(unit['x'], unit['y']) for unit in state['pgs']['units'] if unit['type'] == "Base" and unit['player'] == PLAYER])
 
     def _get_valid_attack_positions(self, state):
-        return set([(unit['x'], unit['y']) for unit in state['pgs']['units'] if unit['type'] is not "Resource" and unit['player'] is not PLAYER])
+        return set([(unit['x'], unit['y']) for unit in state['pgs']['units'] if unit['type'] != "Resource" and unit['player'] != PLAYER])
 
 
     def get_valid_action_positions_for_state(self, state):
@@ -182,6 +182,8 @@ class Server(object):
 
             if action['type'] == ATTACK:
                 if self._is_on_grid(position) and position in valid_attack_positions:
+                    action['x'] = position[0]
+                    action['y'] = position[1]
                     valid_actions.append(action)
 
             if action['type'] == PRODUCE:

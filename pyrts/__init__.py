@@ -1,1 +1,1 @@
-from server import Server
+from pyrts.server import Server
