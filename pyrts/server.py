@@ -3,10 +3,14 @@ import socket
 import sys
 import json
 
+PLAYER = 0
+
 NONE =-1
 MOVE = 1
 HARVEST = 2
+RETURN = 3
 PRODUCE = 4
+ATTACK = 5
 
 UP = 0
 RIGHT = 1
@@ -103,13 +107,40 @@ class Server(object):
     def get_busy_units(self, state):
         return [unit['ID'] for unit in state['actions']]
 
-    def _get_unavailable_move_positions(self, state):
-        return set((unit['x'], unit['y']) for unit in state['pgs']['units'])
+    def _get_invalid_move_positions(self, state):
+        return set([(unit['x'], unit['y']) for unit in state['pgs']['units']])
 
-    def _get_available_harvest_positions(self, state):
-        return set((unit['x'], unit['y']) for unit in state['pgs']['units'] if unit['type'] == "Resource")
+    def _get_valid_harvest_positions(self, state):
+        return set([(unit['x'], unit['y']) for unit in state['pgs']['units'] if unit['type'] == "Resource"])
 
-    def get_valid_actions_for_unit(self, unit, available_actions, state):
+    def _get_valid_base_positions(self, state):
+        return set([(unit['x'], unit['y']) for unit in state['pgs']['units'] if unit['type'] == "Base" and unit['player'] is PLAYER])
+
+    def _get_valid_attack_positions(self, state):
+        return set([(unit['x'], unit['y']) for unit in state['pgs']['units'] if unit['type'] is not "Resource" and unit['player'] is not PLAYER])
+
+
+    def get_valid_action_positions_for_state(self, state):
+        """
+        Returns a tuple containing the following:
+        invalid_move_positions - a set of all the positions that cannot be moved into
+        valid_harvest_positions -  a set of all the resource locations
+        valid_base_positions - a set of the positions of bases on the current players team
+        valid_attack_positions - a set of the positions that can be attacked
+
+        These positions can be cross-referenced with possible actions that units can perform, to make sure no invalid
+        actions are sent to the environment
+        :param state:
+        :return:
+        """
+        return (
+            self._get_invalid_move_positions(state),
+            self._get_valid_harvest_positions(state),
+            self._get_valid_base_positions(state),
+            self._get_valid_attack_positions(state)
+        )
+
+    def get_valid_actions_for_unit(self, unit, available_actions, valid_positions):
         """
         Get the actions that are valid for a unit to perform.
 
@@ -123,58 +154,67 @@ class Server(object):
         :return:
         """
 
-        unavailable_move_positions = self._get_unavailable_move_positions(state)
-        available_harvest_positions = self._get_available_harvest_positions(state)
+        (
+            invalid_move_positions,
+            valid_harvest_positions,
+            valid_base_positions,
+            valid_attack_positions
+         ) = valid_positions
 
         valid_actions = []
 
-        self._logger.info('unit position [%d, %d]' % (unit['x'], unit['y']))
+        self._logger.info('unit [%s] position [%d, %d]' % (unit['type'], unit['x'], unit['y']))
 
         # For all the actions make sure that those actions are possible
         for action in available_actions:
+            position = self.get_action_position(action, unit)
             if action['type'] == MOVE:
-                position = self.get_action_position(action, unit)
-
-                if self._is_on_grid(position) and position not in unavailable_move_positions:
-                    self._logger.info(position)
+                if self._is_on_grid(position) and position not in invalid_move_positions:
                     valid_actions.append(action)
-                self._logger.info(valid_actions)
 
             if action['type'] == HARVEST:
-                position = self.get_action_position(action, unit)
+                if self._is_on_grid(position) and position in valid_harvest_positions:
+                    valid_actions.append(action)
 
-                if self._is_on_grid(position) and position in available_harvest_positions:
+            if action['type'] == RETURN:
+                if self._is_on_grid(position) and position in valid_base_positions:
+                    valid_actions.append(action)
+
+            if action['type'] == ATTACK:
+                if self._is_on_grid(position) and position in valid_attack_positions:
                     valid_actions.append(action)
 
             if action['type'] == PRODUCE:
-                position = self.get_action_position(action, unit)
-
                 # Unavailable produce positions are the same as unavailable move positions
-                if self._is_on_grid(position) and position not in unavailable_move_positions:
+                if self._is_on_grid(position) and position not in invalid_move_positions:
                     valid_actions.append(action)
 
+        self._logger.info('valid actions for unit [%s]: %s' % (unit['type'], valid_actions))
         return valid_actions
 
     def get_action_position(self, action, unit):
-        position = None
         if action['parameter'] == UP:
-            position = (unit['x'], unit['y'] + 1)
+            return (unit['x'], unit['y'] - 1)
         if action['parameter'] == RIGHT:
-            position = (unit['x'] + 1, unit['y'])
+            return (unit['x'] + 1, unit['y'])
         if action['parameter'] == DOWN:
-            position = (unit['x'], unit['y'] - 1)
+            return (unit['x'], unit['y'] + 1)
         if action['parameter'] == LEFT:
-            position = (unit['x'] - 1, unit['y'])
-        assert position is not None
-        return position
+            return (unit['x'] - 1, unit['y'])
 
     def _is_on_grid(self, position):
-        return position[0] > 0 and \
-               position[1] > 0 and \
+        return position[0] >= 0 and \
+               position[1] >= 0 and \
                position[0] < self._max_x and \
                position[1] < self._max_y
 
     def get_available_actions_by_type_name(self, unit_type_table, type_name):
+        """
+        Gets a list of the available actions that can be performed by a particlar unit
+        :param unit_type_table:
+        :param type_name:
+        :return:
+        """
         available_actions = []
 
         # Get unit type by type name
@@ -182,52 +222,21 @@ class Server(object):
 
         # canMove
         if unit_type['canMove']:
-            available_actions.extend([
-                {  # UP
-                    'type': MOVE,
-                    'parameter': UP
-                },
-                {  # RIGHT
-                    'type': MOVE,
-                    'parameter': RIGHT
-                },
-                {  # DOWN
-                    'type': MOVE,
-                    'parameter': DOWN
-                },
-                {  # LEFT
-                    'type': MOVE,
-                    'parameter': LEFT
-                }
-            ])
+            available_actions.extend(self._get_directional_actions(MOVE))
+
         # canAttack
         if unit_type['canAttack']:
             # This is more complicated because the params have x-y coordinates and a range
-            pass
+            if unit_type['attackRange'] == 1:
+                available_actions.extend(self._get_directional_actions(ATTACK))
 
         # canHarvest
-        if unit_type['canHarvest'] and False:
-            available_actions.extend([
-                {  # UP
-                    'type': HARVEST,
-                    'parameter': UP
-                },
-                {  # RIGHT
-                    'type': HARVEST,
-                    'parameter': RIGHT
-                },
-                {  # DOWN
-                    'type': HARVEST,
-                    'parameter': DOWN
-                },
-                {  # LEFT
-                    'type': HARVEST,
-                    'parameter': LEFT
-                }
-            ])
+        if unit_type['canHarvest']:
+            available_actions.extend(self._get_directional_actions(HARVEST))
+            available_actions.extend(self._get_directional_actions(RETURN))
 
         # If this unit can produce anything
-        if len(unit_type['produces']) > 0 and False:
+        if len(unit_type['produces']) > 0:
             available_actions.extend([
                 {'type': PRODUCE, 'unitType': unit_type_name,'parameter': UP } for unit_type_name in unit_type['produces']
             ])
@@ -242,6 +251,9 @@ class Server(object):
             ])
 
         return available_actions
+
+    def _get_directional_actions(self, action_type):
+        return [{'type': action_type, 'parameter': direction} for direction in [UP, DOWN, LEFT, RIGHT]]
 
     def start(self):
         self._logger.debug('Socket created')

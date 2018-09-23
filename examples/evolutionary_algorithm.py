@@ -40,16 +40,17 @@ class AI(Server):
         available_bases = self.get_unit_by_type(available_units, 'Base')
 
         available_worker_actions = self.get_available_actions_by_type_name(unit_type_table, 'Worker')
+        valid_action_positions_for_state = self.get_valid_action_positions_for_state(state)
         for worker in available_workers:
             # Assign a random action
-            valid_actions = self.get_valid_actions_for_unit(worker, available_worker_actions, state)
+            valid_actions = self.get_valid_actions_for_unit(worker, available_worker_actions, valid_action_positions_for_state)
             if len(valid_actions) > 0:
                 actions.append({'unitID': worker['ID'], 'unitAction': random.choice(valid_actions)})
 
         available_base_actions = self.get_available_actions_by_type_name(unit_type_table, 'Base')
         for base in available_bases:
             # Assign a random action
-            valid_actions = self.get_valid_actions_for_unit(base, available_base_actions, state)
+            valid_actions = self.get_valid_actions_for_unit(base, available_base_actions, valid_action_positions_for_state)
             if len(valid_actions) > 0:
                 actions.append({'unitID': base['ID'], 'unitAction': random.choice(valid_actions)})
 
