@@ -5,7 +5,7 @@ import json
 
 PLAYER = 0
 
-NONE =-1
+NONE = 0
 MOVE = 1
 HARVEST = 2
 RETURN = 3
@@ -65,6 +65,8 @@ class Server(object):
         pass
 
     def _process_state_and_get_action(self, state, gameover):
+        self.get_grid_from_state(state)
+
         actions = self.get_action(state, gameover)
 
         if gameover:
@@ -117,7 +119,7 @@ class Server(object):
 
 
     def get_valid_action_positions_for_state(self, state):
-        """
+        '''
         Returns a tuple containing the following:
         invalid_move_positions - a set of all the positions that cannot be moved into
         valid_harvest_positions -  a set of all the resource locations
@@ -128,7 +130,7 @@ class Server(object):
         actions are sent to the environment
         :param state:
         :return:
-        """
+        '''
         return (
             self._get_invalid_move_positions(state),
             self._get_valid_harvest_positions(state),
@@ -137,13 +139,13 @@ class Server(object):
         )
 
     def get_valid_actions_for_unit(self, unit, available_actions, valid_positions):
-        """
+        '''
         Get the actions that are valid for a unit to perform.
 
         An action is INVALID if the action cannot be performed in the environment.
 
         For example, if the action is MOVE(left) but the position to the left of the unit is blocked
-        """
+        '''
 
         (
             invalid_move_positions,
@@ -202,9 +204,9 @@ class Server(object):
                position[1] < self._max_y
 
     def get_available_actions_by_type_name(self, unit_type_table, type_name):
-        """
+        '''
         Gets a list of the available actions that can be performed by a particlar unit
-        """
+        '''
 
         available_actions = []
 
@@ -244,40 +246,61 @@ class Server(object):
         return available_actions
 
     def get_resources_for_player(self, state, for_player=None):
-        """
+        '''
         Get the number of resources the player currently has available
-        """
+        '''
 
         if not for_player:
             for_player = 0
 
         for player in state['pgs']['players']:
-            if player['resources'] == for_player:
+            if player['ID'] == for_player:
                 return player['resources']
 
     def _get_directional_actions(self, action_type):
         return [{'type': action_type, 'parameter': direction} for direction in [UP, DOWN, LEFT, RIGHT]]
 
     def get_grid_from_state(self, state):
-        """
-        Gets the wdith and height of the environment
-        """
+        '''
+        Gets the width and height of the environment
+        '''
 
         self._max_x = state['pgs']['width']
         self._max_y = state['pgs']['height']
 
         return (self._max_x, self._max_y)
 
-    def get_resource_level_from_state(self, state):
+    def get_resource_usage_from_state(self, state):
+        '''
+        How many resources are currently being used to build units
+        '''
+
+        used_resources = 0
+        unit_types = self._unit_type_table['unitTypes']
+        for action in state['actions']:
+            unit_action = action['action']
+            if unit_action['type'] == PRODUCE:
+                for unit_type in unit_types:
+                    if unit_action['unitType'] == unit_type['name']:
+                        used_resources += unit_type['cost']
+
+        return used_resources
 
     def get_resource_usage_from_actions(self, actions):
-        unit_types = self._get_utt()['unitTypes']
+        '''
+        From a list of actions, sum the cost of the actions
+        '''
+
+        used_resources = 0
+        unit_types = self._unit_type_table['unitTypes']
         for action in actions:
-            if action['type'] == PRODUCE:
+            unit_action = action['unitAction']
+            if unit_action['type'] == PRODUCE:
                 for unit_type in unit_types:
-                    if action['unitType'] == unit_type['name']:
+                    if unit_action['unitType'] == unit_type['name']:
+                        used_resources += unit_type['cost']
 
-
+        return used_resources
 
     def start(self):
         self._logger.debug('Socket created')

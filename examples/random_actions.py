@@ -1,3 +1,4 @@
+import pyrts
 from pyrts import Server
 import json
 from collections import defaultdict
@@ -7,7 +8,6 @@ class AI(Server):
     """
     Randomly selects actions for each unit
     """
-
 
     def __init__(self):
         super(AI, self).__init__()
@@ -72,9 +72,21 @@ class AI(Server):
         if len(actions):
             self._logger.info(json.dumps(actions))
 
+        resources_being_used = self.get_resource_usage_from_state(state)
+        resources_used_in_new_actions = self.get_resource_usage_from_actions(actions)
+
+        # Potential resource usage
+        potential_resource_usage = resources_being_used + resources_used_in_new_actions
+
+        # If we dont have enought resources to run some commands, we remove those commands
+        if potential_resource_usage > self.get_resources_for_player(state):
+            for action in actions:
+                if action['unitAction']['type'] == pyrts.PRODUCE:
+                    action['unitAction'] = {'type': pyrts.NONE}
+
         # For busy units we need to just send NONE action (-1)
         for unit_id in busy_units:
-            actions.append({'unitID': unit_id, 'unitAction': {'type': -1}})
+            actions.append({'unitID': unit_id, 'unitAction': {'type': pyrts.NONE}})
 
         return actions
 
