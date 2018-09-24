@@ -49,7 +49,7 @@ class AI(Server):
 
 ```
 
-The format of the action should be the following:
+The format of the actions list returned should be like be the following:
 
 ```
 
@@ -69,6 +69,13 @@ The format of the action should be the following:
 
 ```
 
+for every game tick, the `get_action` function is called. 
+
+##### NOTE
+If there are no actions to send to the units in the game then the action NONE should be sent.
+NONE should also be sent to any units that are currently performing action that take time. (a list of these units is 
+returned by `get_busy_units`)
+
 ## Examples
 
 Examples can be found in the `examples` directory.
@@ -83,7 +90,7 @@ Currently the following algorithms are implemented:
 
 ## Useful functions in the Server class
 
-##### get_busy_units(units)
+##### get_busy_units(state)
 
 Get a list of the units that are currently busy performing an action
 
