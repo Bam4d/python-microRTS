@@ -6,8 +6,21 @@ A python client library for microRTS.
 
 The python client library makes use of the `SocketAI` interface in the microRTS library.
 
+By default the socketAI library will connect to localhost:9898. The python client is hard-coded to use these values also.
 
-## How to use
+
+## Running
+Firstly start your AI class in python... you should see some logging that looks like 
+```
+DEBUG:RTSServer:Socket created
+DEBUG:RTSServer:Socket bind complete
+DEBUG:RTSServer:Socket now listening
+server is running
+```
+
+One you see this logging, you can start a microRTS environment and it should connect to the control server.
+
+## How to create a controller
 
 1. Create a class that inherits the `Server` class in  `server.py`
 
