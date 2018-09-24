@@ -128,9 +128,8 @@ class Server(object):
 
         These positions can be cross-referenced with possible actions that units can perform, to make sure no invalid
         actions are sent to the environment
-        :param state:
-        :return:
         '''
+
         return (
             self._get_invalid_move_positions(state),
             self._get_valid_harvest_positions(state),

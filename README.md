@@ -56,21 +56,29 @@ The format of the action should be the following:
 
 ```
 
-#### Note
-Actions for agents can take several time steps, `server.py` will automatically filter out any actions that are returned
-by the `get_action` method that are currently performing a previous action.
+## Examples
 
-### Useful functions in the Server class
+Examples can be found in the `examples` directory.
 
-#### get_busy_units(units)
+Currently the following algorithms are implemented:
+
+
+....
+##### super simple examples
+ - random actions - perform random actions for all units
+ - random bot movement - a random walk for the single worker that starts
+
+## Useful functions in the Server class
+
+##### get_busy_units(units)
 
 Get a list of the units that are currently busy performing an action
 
-#### get_available_actions_by_type(unit_type_table, type)
+##### get_available_actions_by_type(unit_type_table, type)
 
 Given the unit type and the unit type table, return a complete list of the possible actions that unit can perform
 
-#### get_unit_type_table()
+##### get_unit_type_table()
 
 This function returns the unit type table, which describes the environment.
 
@@ -266,3 +274,36 @@ for example, the environment `basesWorkers16x16.xml` will return:
 }
 
 ```
+
+##### get_valid_action_positions_for_state(state):
+
+Returns a tuple containing the following:
+*invalid_move_positions* - a set of all the positions that cannot be moved into
+*valid_harvest_positions* -  a set of all the resource locations
+*valid_base_positions* - a set of the positions of bases on the current players team
+*valid_attack_positions* - a set of the positions that can be attacked
+
+These positions can be cross-referenced with possible actions that units can perform, to make sure no invalid
+actions are sent to the environment
+
+##### get_valid_actions_for_unit(unit, available_actions, valid_positions)
+
+Get the actions that are valid for a unit to perform.
+An action is INVALID if the action cannot be performed in the environment.
+For example, if the action is MOVE(left) but the position to the left of the unit is blocked
+
+##### get_available_actions_by_type_name(unit_type_table, type_name)
+
+Gets a list of the available actions that can be performed by a particlar unit
+
+##### get_resources_for_player(state, player)
+
+Get the number of resources the player currently has available
+
+##### get_resource_usage_from_state(state)
+
+How many resources are currently being used to build units
+
+##### get_resource_usage_from_actions(actions)
+
+From a list of actions, sum the cost of the actions
