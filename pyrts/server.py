@@ -27,10 +27,6 @@ class Server(object):
         self._s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        self._max_x = 16
-        self._max_y = 16
-
-
     def _ack(self):
         self._send()
 
@@ -147,11 +143,6 @@ class Server(object):
         An action is INVALID if the action cannot be performed in the environment.
 
         For example, if the action is MOVE(left) but the position to the left of the unit is blocked
-
-        :param unit:
-        :param available_actions:
-        :param state:
-        :return:
         """
 
         (
@@ -213,10 +204,8 @@ class Server(object):
     def get_available_actions_by_type_name(self, unit_type_table, type_name):
         """
         Gets a list of the available actions that can be performed by a particlar unit
-        :param unit_type_table:
-        :param type_name:
-        :return:
         """
+
         available_actions = []
 
         # Get unit type by type name
@@ -254,8 +243,41 @@ class Server(object):
 
         return available_actions
 
+    def get_resources_for_player(self, state, for_player=None):
+        """
+        Get the number of resources the player currently has available
+        """
+
+        if not for_player:
+            for_player = 0
+
+        for player in state['pgs']['players']:
+            if player['resources'] == for_player:
+                return player['resources']
+
     def _get_directional_actions(self, action_type):
         return [{'type': action_type, 'parameter': direction} for direction in [UP, DOWN, LEFT, RIGHT]]
+
+    def get_grid_from_state(self, state):
+        """
+        Gets the wdith and height of the environment
+        """
+
+        self._max_x = state['pgs']['width']
+        self._max_y = state['pgs']['height']
+
+        return (self._max_x, self._max_y)
+
+    def get_resource_level_from_state(self, state):
+
+    def get_resource_usage_from_actions(self, actions):
+        unit_types = self._get_utt()['unitTypes']
+        for action in actions:
+            if action['type'] == PRODUCE:
+                for unit_type in unit_types:
+                    if action['unitType'] == unit_type['name']:
+
+
 
     def start(self):
         self._logger.debug('Socket created')
