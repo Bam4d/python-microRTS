@@ -1,6 +1,14 @@
 # python-microRTS
 
+[![PyPI version](https://badge.fury.io/py/python-microRTS.svg)](https://badge.fury.io/py/python-microRTS)
+
 A python client library for microRTS.
+
+## Installation
+
+```
+pip install python-microRTS
+```
 
 ## Overview
 
@@ -327,3 +335,10 @@ How many resources are currently being used to build units
 ##### get_resource_usage_from_actions(actions)
 
 From a list of actions, sum the cost of the actions
+
+## Cite
+
+If you want to cite this library, please use the following DOI
+
+[![DOI](https://zenodo.org/badge/149242629.svg)](https://zenodo.org/badge/latestdoi/149242629)
+
