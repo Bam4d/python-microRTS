@@ -65,13 +65,11 @@ class Server(object):
         pass
 
     def _process_state_and_get_action(self, state, gameover):
-        self.get_grid_from_state(state)
-
-        actions = self.get_action(state, gameover)
-
         if gameover:
             return None
         else:
+            self.get_grid_from_state(state)
+            actions = self.get_action(state, gameover)
             return self._filter_invalid_actions(actions, state)
 
 
