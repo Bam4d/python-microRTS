@@ -81,12 +81,12 @@ class AI(Server):
         # If we dont have enought resources to run some commands, we remove those commands
         if potential_resource_usage > self.get_resources_for_player(state):
             for action in actions:
-                if action['unitAction']['type'] == pyrts.PRODUCE:
-                    action['unitAction'] = {'type': pyrts.NONE}
+                if action['unitAction']['type'] == pyrts.Action.PRODUCE:
+                    action['unitAction'] = {'type': pyrts.Action.NONE}
 
         # For busy units we need to just send NONE action (-1)
         for unit_id in busy_units:
-            actions.append({'unitID': unit_id, 'unitAction': {'type': pyrts.NONE}})
+            actions.append({'unitID': unit_id, 'unitAction': {'type': pyrts.Action.NONE}})
 
         return actions
 

@@ -1,7 +1,9 @@
-from pyrts import Server
 import json
 from collections import defaultdict
-from random import randint
+from random import choice
+
+from pyrts import Server, Direction
+
 
 class AI(Server):
     """
@@ -30,7 +32,7 @@ class AI(Server):
         if not unit_id:
             return []
 
-        unit_action = {'type': 1, 'parameter': randint(1,4)}
+        unit_action = {'type': 1, 'parameter': choice(Direction.as_list())}
         test_action = {'unitID': unit_id, 'unitAction': unit_action}
 
         return [test_action]

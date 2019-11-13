@@ -6,17 +6,28 @@ from abc import abstractmethod
 
 PLAYER = 0
 
-NONE = 0
-MOVE = 1
-HARVEST = 2
-RETURN = 3
-PRODUCE = 4
-ATTACK = 5
+class Action:
+    NONE = 0
+    MOVE = 1
+    HARVEST = 2
+    RETURN = 3
+    PRODUCE = 4
+    ATTACK = 5
 
-UP = 0
-RIGHT = 1
-DOWN = 2
-LEFT = 3
+    @staticmethod
+    def as_list():
+        return [NONE, MOVE, HARVEST, RETURN, PRODUCE, ATTACK]
+
+
+class Direction:
+    UP = 0
+    RIGHT = 1
+    DOWN = 2
+    LEFT = 3
+
+    @staticmethod
+    def as_list():
+        return [UP, RIGHT, DOWN, LEFT]
 
 
 class Server(object):
@@ -166,25 +177,25 @@ class Server(object):
         # For all the actions make sure that those actions are possible
         for action in available_actions:
             position = self.get_action_position(action, unit)
-            if action['type'] == MOVE:
+            if action['type'] == Action.MOVE:
                 if self._is_on_grid(position) and position not in invalid_move_positions:
                     valid_actions.append(action)
 
-            if action['type'] == HARVEST:
+            if action['type'] == Action.HARVEST:
                 if self._is_on_grid(position) and position in valid_harvest_positions:
                     valid_actions.append(action)
 
-            if action['type'] == RETURN:
+            if action['type'] == Action.RETURN:
                 if self._is_on_grid(position) and position in valid_base_positions:
                     valid_actions.append(action)
 
-            if action['type'] == ATTACK:
+            if action['type'] == Action.ATTACK:
                 if self._is_on_grid(position) and position in valid_attack_positions:
                     action['x'] = position[0]
                     action['y'] = position[1]
                     valid_actions.append(action)
 
-            if action['type'] == PRODUCE:
+            if action['type'] == Action.PRODUCE:
                 # Unavailable produce positions are the same as unavailable move positions
                 if self._is_on_grid(position) and position not in invalid_move_positions:
                     valid_actions.append(action)
@@ -193,14 +204,14 @@ class Server(object):
         return valid_actions
 
     def get_action_position(self, action, unit):
-        if action['parameter'] == UP:
-            return (unit['x'], unit['y'] - 1)
-        if action['parameter'] == RIGHT:
-            return (unit['x'] + 1, unit['y'])
-        if action['parameter'] == DOWN:
-            return (unit['x'], unit['y'] + 1)
-        if action['parameter'] == LEFT:
-            return (unit['x'] - 1, unit['y'])
+        if action['parameter'] == Direction.UP:
+            return unit['x'], unit['y'] - 1
+        if action['parameter'] == Direction.RIGHT:
+            return unit['x'] + 1, unit['y']
+        if action['parameter'] == Direction.DOWN:
+            return unit['x'], unit['y'] + 1
+        if action['parameter'] == Direction.LEFT:
+            return unit['x'] - 1, unit['y']
 
     def _is_on_grid(self, position):
         return position[0] >= 0 and \
@@ -220,33 +231,57 @@ class Server(object):
 
         # canMove
         if unit_type['canMove']:
-            available_actions.extend(self._get_directional_actions(MOVE))
+            available_actions.extend(self._get_directional_actions(Action.MOVE))
 
         # canAttack
         if unit_type['canAttack']:
             # This is more complicated because the params have x-y coordinates and a range
             if unit_type['attackRange'] == 1:
-                available_actions.extend(self._get_directional_actions(ATTACK))
+                available_actions.extend(self._get_directional_actions(Action.ATTACK))
 
         # canHarvest
         if unit_type['canHarvest']:
-            available_actions.extend(self._get_directional_actions(HARVEST))
-            available_actions.extend(self._get_directional_actions(RETURN))
+            available_actions.extend(self._get_directional_actions(Action.HARVEST))
+            available_actions.extend(self._get_directional_actions(Action.RETURN))
 
         # If this unit can produce anything
         if len(unit_type['produces']) > 0:
-            available_actions.extend([
-                {'type': PRODUCE, 'unitType': unit_type_name,'parameter': UP } for unit_type_name in unit_type['produces']
-            ])
-            available_actions.extend([
-                {'type': PRODUCE, 'unitType': unit_type_name, 'parameter': RIGHT} for unit_type_name in unit_type['produces']
-            ])
-            available_actions.extend([
-                {'type': PRODUCE, 'unitType': unit_type_name, 'parameter': DOWN} for unit_type_name in unit_type['produces']
-            ])
-            available_actions.extend([
-                {'type': PRODUCE, 'unitType': unit_type_name, 'parameter': LEFT} for unit_type_name in unit_type['produces']
-            ])
+            available_actions.extend(
+                [
+                    {
+                        'type': Action.PRODUCE,
+                        'unitType': unit_type_name,
+                        'parameter': Direction.UP
+                    } for unit_type_name in unit_type['produces']
+                ]
+            )
+            available_actions.extend(
+                [
+                    {
+                        'type': Action.PRODUCE,
+                        'unitType': unit_type_name,
+                        'parameter': Direction.RIGHT
+                    } for unit_type_name in unit_type['produces']
+                ]
+            )
+            available_actions.extend(
+                [
+                    {
+                        'type': Action.PRODUCE,
+                        'unitType': unit_type_name,
+                        'parameter': Direction.DOWN
+                    } for unit_type_name in unit_type['produces']
+                ]
+            )
+            available_actions.extend(
+                [
+                    {
+                        'type': Action.PRODUCE,
+                        'unitType': unit_type_name,
+                        'parameter': Direction.LEFT
+                    } for unit_type_name in unit_type['produces']
+                ]
+            )
 
         return available_actions
 
@@ -263,7 +298,7 @@ class Server(object):
                 return player['resources']
 
     def _get_directional_actions(self, action_type):
-        return [{'type': action_type, 'parameter': direction} for direction in [UP, DOWN, LEFT, RIGHT]]
+        return [{'type': action_type, 'parameter': direction} for direction in Direction.as_list()]
 
     def get_grid_from_state(self, state):
         '''
@@ -284,7 +319,7 @@ class Server(object):
         unit_types = self._unit_type_table['unitTypes']
         for action in state['actions']:
             unit_action = action['action']
-            if unit_action['type'] == PRODUCE:
+            if unit_action['type'] == Action.PRODUCE:
                 for unit_type in unit_types:
                     if unit_action['unitType'] == unit_type['name']:
                         used_resources += unit_type['cost']
@@ -300,7 +335,7 @@ class Server(object):
         unit_types = self._unit_type_table['unitTypes']
         for action in actions:
             unit_action = action['unitAction']
-            if unit_action['type'] == PRODUCE:
+            if unit_action['type'] == Action.PRODUCE:
                 for unit_type in unit_types:
                     if unit_action['unitType'] == unit_type['name']:
                         used_resources += unit_type['cost']
