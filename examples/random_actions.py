@@ -92,8 +92,7 @@ class AI(Server):
 
         return actions
 
-ai = AI()
 
 if __name__ == '__main__':
-    print('server is running')
+    ai = AI()
     ai.start()
