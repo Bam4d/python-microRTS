@@ -2,6 +2,7 @@ import logging
 import socket
 import sys
 import json
+from abc import abstractmethod
 
 PLAYER = 0
 
@@ -16,6 +17,7 @@ UP = 0
 RIGHT = 1
 DOWN = 2
 LEFT = 3
+
 
 class Server(object):
 
@@ -56,6 +58,7 @@ class Server(object):
         busy_units = self.get_busy_units(state)
         return [action for action in actions if action['unitID'] not in busy_units]
 
+    @abstractmethod
     def get_action(self, state, gameover):
         '''
         To be implemented by a super class
