@@ -41,7 +41,7 @@ class Server(object):
         self._connection.send(('%s\n' % data_string).encode('utf-8'))
 
     def _wait_for_message(self):
-        environment_message = self._connection.recv(4096).decode('utf-8')
+        environment_message = self._connection.recv(8192).decode('utf-8')
         if environment_message[0] == u'\n':
             return ('ACK')
         self._logger.debug('Message: %s' % environment_message)
