@@ -215,10 +215,7 @@ class Server(object):
             return unit['x'] - 1, unit['y']
 
     def _is_on_grid(self, position):
-        return position[0] >= 0 and \
-               position[1] >= 0 and \
-               position[0] < self._max_x and \
-               position[1] < self._max_y
+        return 0 <= position[0] < self._max_x and 0 <= position[1] < self._max_y
 
     def get_available_actions_by_type_name(self, unit_type_table, type_name):
         """
@@ -309,7 +306,7 @@ class Server(object):
         self._max_x = state['pgs']['width']
         self._max_y = state['pgs']['height']
 
-        return (self._max_x, self._max_y)
+        return self._max_x, self._max_y
 
     def get_resource_usage_from_state(self, state):
         """
