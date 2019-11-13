@@ -119,9 +119,18 @@ class Server(object):
         self._ack()
 
     def get_unit_type_table(self):
+        """Returns the unit type table, which describes the environment
+        
+        :return: [description]
+        """
         return self._unit_type_table
 
     def get_busy_units(self, state):
+        """Get a list of the units that are currently busy performing an action
+
+        :param state: [description]
+        :return: [description]
+        """
         return [unit['ID'] for unit in state['actions']]
 
     def _get_invalid_move_positions(self, state):
