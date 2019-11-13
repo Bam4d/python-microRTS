@@ -137,14 +137,28 @@ class Server(object):
         return set([(unit['x'], unit['y']) for unit in state['pgs']['units']])
 
     def _get_valid_harvest_positions(self, state):
-        return set([(unit['x'], unit['y']) for unit in state['pgs']['units'] if unit['type'] == "Resource"])
+        return set(
+            [
+                (unit['x'], unit['y']) for unit in state['pgs']['units']
+                if unit['type'] == "Resource"
+            ]
+        )
 
     def _get_valid_base_positions(self, state):
-        return set([(unit['x'], unit['y']) for unit in state['pgs']['units'] if unit['type'] == "Base" and unit['player'] == PLAYER])
+        return set(
+            [
+                (unit['x'], unit['y']) for unit in state['pgs']['units']
+                if unit['type'] == "Base" and unit['player'] == PLAYER
+            ]
+        )
 
     def _get_valid_attack_positions(self, state):
-        return set([(unit['x'], unit['y']) for unit in state['pgs']['units'] if unit['type'] != "Resource" and unit['player'] != PLAYER])
-
+        return set(
+            [
+                (unit['x'], unit['y']) for unit in state['pgs']['units']
+                if unit['type'] != "Resource" and unit['player'] != PLAYER
+            ]
+        )
 
     def get_valid_action_positions_for_state(self, state):
         """
