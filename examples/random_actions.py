@@ -12,8 +12,8 @@ class AI(Server):
     def __init__(self):
         super(AI, self).__init__()
 
-    def get_unit_by_type(self, units, type):
-        return [unit for unit in units if unit['type'] == type]
+    def get_unit_by_type(self, units, unit_type):
+        return [unit for unit in units if unit['type'] == unit_type]
 
     def get_action(self, state, gameover):
 
