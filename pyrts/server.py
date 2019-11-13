@@ -70,24 +70,29 @@ class Server(object):
     def _process_state_and_get_action(self, state, gameover):
         if gameover:
             return None
+        elif state == {}:
+            return []
         else:
             self.get_grid_from_state(state)
             actions = self.get_action(state, gameover)
             return self._filter_invalid_actions(actions, state)
 
-
     def _wait_for_get_action(self):
         message_parts = self._wait_for_message()
-
         command = message_parts[0].split()
-        if command[0] == 'getAction':
 
-            state = json.loads(message_parts[1])
-            self._logger.debug('state: %s' % state)
-            gameover = False
-        else:
-            gameover = True
-            state = {}
+        state = {}
+        gameover = command[0] == 'gameOver'
+
+        if command[0] == 'getAction':
+            try:
+                state = json.loads(message_parts[1])
+                self._logger.debug('state: %s' % state)
+            except json.decoder.JSONDecodeError as e:
+                self._logger.fatal(
+                    'The message size has gotten larger what is recovered by the socket.'
+                )
+                raise e
 
         return self._process_state_and_get_action(state, gameover)
 
