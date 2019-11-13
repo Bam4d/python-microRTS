@@ -58,7 +58,7 @@ class Server(object):
 
     def get_action(self, state, gameover):
         '''
-        To be implemented by a syper class
+        To be implemented by a super class
         :param state:
         :return:
         '''
