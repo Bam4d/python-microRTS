@@ -13,8 +13,7 @@ class AI(Server):
     def __init__(self):
         super(AI, self).__init__()
 
-    def get_action(self, state):
-
+    def get_action(self, state,gameover):
         unit_by_player = defaultdict(list)
         for unit in state['pgs']['units']:
             unit_by_player[unit['player']].append(unit)
