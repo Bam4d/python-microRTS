@@ -1,10 +1,11 @@
+import json
 import logging
 import socket
 import sys
-import json
 from abc import abstractmethod
 
 PLAYER = 0
+
 
 class Action:
     NONE = 0

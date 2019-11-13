@@ -1,8 +1,10 @@
+import json
+import random
+from collections import defaultdict
+
 import pyrts
 from pyrts import Server
-import json
-from collections import defaultdict
-import random
+
 
 class AI(Server):
     """
