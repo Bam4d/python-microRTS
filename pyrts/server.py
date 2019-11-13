@@ -62,21 +62,22 @@ class Server(object):
         return message_parts
 
     def _filter_invalid_actions(self, actions, state):
-        '''
+        """
         Get the units that are currently performing actions from the state and remove any actions that refer to these
         units
         :return: A filtered list of all the actions that can be applied
-        '''
+        """
         busy_units = self.get_busy_units(state)
         return [action for action in actions if action['unitID'] not in busy_units]
 
     @abstractmethod
     def get_action(self, state, gameover):
-        '''
+        """
         To be implemented by a super class
         :param state:
+        :param gameover:
         :return:
-        '''
+        """
         pass
 
     def _process_state_and_get_action(self, state, gameover):
@@ -137,16 +138,15 @@ class Server(object):
 
 
     def get_valid_action_positions_for_state(self, state):
-        '''
+        """
         Returns a tuple containing the following:
         invalid_move_positions - a set of all the positions that cannot be moved into
         valid_harvest_positions -  a set of all the resource locations
         valid_base_positions - a set of the positions of bases on the current players team
         valid_attack_positions - a set of the positions that can be attacked
 
-        These positions can be cross-referenced with possible actions that units can perform, to make sure no invalid
-        actions are sent to the environment
-        '''
+        These positions can be cross-referenced with possible actions that units can perform, to make sure no invalid actions are sent to the environment
+        """
 
         return (
             self._get_invalid_move_positions(state),
@@ -156,13 +156,13 @@ class Server(object):
         )
 
     def get_valid_actions_for_unit(self, unit, available_actions, valid_positions):
-        '''
+        """
         Get the actions that are valid for a unit to perform.
 
         An action is INVALID if the action cannot be performed in the environment.
 
         For example, if the action is MOVE(left) but the position to the left of the unit is blocked
-        '''
+        """
 
         (
             invalid_move_positions,
@@ -221,9 +221,9 @@ class Server(object):
                position[1] < self._max_y
 
     def get_available_actions_by_type_name(self, unit_type_table, type_name):
-        '''
-        Gets a list of the available actions that can be performed by a particlar unit
-        '''
+        """
+        Given the unit type and the unit type table, return a complete list of the possible actions that unit can perform
+        """
 
         available_actions = []
 
@@ -287,9 +287,9 @@ class Server(object):
         return available_actions
 
     def get_resources_for_player(self, state, for_player=None):
-        '''
+        """
         Get the number of resources the player currently has available
-        '''
+        """
 
         if not for_player:
             for_player = 0
@@ -302,9 +302,9 @@ class Server(object):
         return [{'type': action_type, 'parameter': direction} for direction in Direction.as_list()]
 
     def get_grid_from_state(self, state):
-        '''
+        """
         Gets the width and height of the environment
-        '''
+        """
 
         self._max_x = state['pgs']['width']
         self._max_y = state['pgs']['height']
@@ -312,9 +312,9 @@ class Server(object):
         return (self._max_x, self._max_y)
 
     def get_resource_usage_from_state(self, state):
-        '''
+        """
         How many resources are currently being used to build units
-        '''
+        """
 
         used_resources = 0
         unit_types = self._unit_type_table['unitTypes']
@@ -328,9 +328,9 @@ class Server(object):
         return used_resources
 
     def get_resource_usage_from_actions(self, actions):
-        '''
+        """
         From a list of actions, sum the cost of the actions
-        '''
+        """
 
         used_resources = 0
         unit_types = self._unit_type_table['unitTypes']
