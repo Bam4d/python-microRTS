@@ -82,20 +82,19 @@ class Server(object):
         pass
 
     def _process_state_and_get_action(self, state, gameover):
+        # TODO it would be nice if get_action is called when gameover == True,
+        # so that the controller can find out if it has won or lost
         if gameover:
             return None
-        elif state == {}:
-            return []
-        else:
-            self.get_grid_from_state(state)
-            actions = self.get_action(state, gameover)
-            return self._filter_invalid_actions(actions, state)
+            
+        actions = self.get_action(state, gameover)
+        self.get_grid_from_state(state)
+        return self._filter_invalid_actions(actions, state)
 
     def _wait_for_get_action(self):
         message_parts = self._wait_for_message()
         command = message_parts[0].split()
 
-        state = {}
         gameover = command[0] == 'gameOver'
 
         if command[0] == 'getAction':
@@ -108,7 +107,7 @@ class Server(object):
                 )
                 raise e
 
-        return self._process_state_and_get_action(state, gameover)
+            return self._process_state_and_get_action(state, gameover)
 
     def _get_budgets(self):
         _, self._time_budget, self._iteration_budget = self._wait_for_message()[0].split()
@@ -326,12 +325,8 @@ class Server(object):
         """
         Gets the width and height of the environment
         """
-
-        # in case the state gets here uninitialized,
-        # due to network problems or a gameover
-        if state is not None and state != {}:
-            self._max_x = state['pgs']['width']
-            self._max_y = state['pgs']['height']
+        self._max_x = state['pgs']['width']
+        self._max_y = state['pgs']['height']
 
         return self._max_x, self._max_y
 
