@@ -22,13 +22,15 @@ class AI(Server):
 
         ## CREATE A TEST ACTION
 
+
+        unit_id = None
         ## find a unit that we can move
         ## I AM PLAYER 1
         for unit in unit_by_player[1]:
             if unit['type'] == 'Worker':
                 unit_id = unit['ID']
 
-        if not unit_id:
+        if unit_id is None:
             return []
 
         unit_action = {'type': 1, 'parameter': choice(Direction.as_list())}
