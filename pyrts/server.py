@@ -4,8 +4,6 @@ import socket
 import sys
 from abc import abstractmethod
 
-PLAYER = 0
-
 
 class Action:
     NONE = 0
@@ -37,6 +35,9 @@ class Server(object):
         logging.basicConfig()
         self._logger = logging.getLogger('RTSServer')
         self._logger.setLevel(logging.DEBUG)
+
+        self._max_x = None
+        self._max_y = None
 
         self._s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -144,23 +145,23 @@ class Server(object):
             ]
         )
 
-    def _get_valid_base_positions(self, state):
+    def _get_valid_base_positions(self, state, player_id):
         return set(
             [
                 (unit['x'], unit['y']) for unit in state['pgs']['units']
-                if unit['type'] == "Base" and unit['player'] == PLAYER
+                if unit['type'] == "Base" and unit['player'] == player_id
             ]
         )
 
-    def _get_valid_attack_positions(self, state):
+    def _get_valid_attack_positions(self, state, player_id):
         return set(
             [
                 (unit['x'], unit['y']) for unit in state['pgs']['units']
-                if unit['type'] != "Resource" and unit['player'] != PLAYER
+                if unit['type'] != "Resource" and unit['player'] != player_id
             ]
         )
 
-    def get_valid_action_positions_for_state(self, state):
+    def get_valid_action_positions_for_state(self, state, player_id):
         """
         Returns a tuple containing the following:
         invalid_move_positions - a set of all the positions that cannot be moved into
@@ -174,8 +175,8 @@ class Server(object):
         return (
             self._get_invalid_move_positions(state),
             self._get_valid_harvest_positions(state),
-            self._get_valid_base_positions(state),
-            self._get_valid_attack_positions(state)
+            self._get_valid_base_positions(state, player_id),
+            self._get_valid_attack_positions(state, player_id)
         )
 
     def get_valid_actions_for_unit(self, unit, available_actions, valid_positions):
