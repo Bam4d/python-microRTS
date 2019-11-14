@@ -327,8 +327,11 @@ class Server(object):
         Gets the width and height of the environment
         """
 
-        self._max_x = state['pgs']['width']
-        self._max_y = state['pgs']['height']
+        # in case the state gets here uninitialized,
+        # due to network problems or a gameover
+        if state is not None and state != {}:
+            self._max_x = state['pgs']['width']
+            self._max_y = state['pgs']['height']
 
         return self._max_x, self._max_y
 
