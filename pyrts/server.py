@@ -17,7 +17,7 @@ class Action:
 
     @staticmethod
     def as_list():
-        return [NONE, MOVE, HARVEST, RETURN, PRODUCE, ATTACK]
+        return [Action.NONE, Action.MOVE, Action.HARVEST, Action.RETURN, Action.PRODUCE, Action.ATTACK]
 
 
 class Direction:
@@ -28,7 +28,7 @@ class Direction:
 
     @staticmethod
     def as_list():
-        return [UP, RIGHT, DOWN, LEFT]
+        return [Direction.UP, Direction.RIGHT, Direction.DOWN, Direction.LEFT]
 
 
 class Server(object):
