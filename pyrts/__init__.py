@@ -1,1 +1,1 @@
-from .server import Server, PLAYER, Action, Direction
+from .server import Server, Action, Direction

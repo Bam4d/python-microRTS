@@ -18,10 +18,6 @@ class AI(Server):
         return [unit for unit in units if unit['type'] == unit_type]
 
     def get_action(self, state, gameover):
-
-        if gameover:
-            return []
-
         unit_type_table = self.get_unit_type_table()
 
         #self._logger.debug(json.dumps(unit_type_table, indent=1, separators=(',', ': ')))
