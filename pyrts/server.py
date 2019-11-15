@@ -73,11 +73,11 @@ class Server(object):
 
     @abstractmethod
     def get_action(self, state, gameover):
-        """
-        To be implemented by a super class
-        :param state:
-        :param gameover:
-        :return:
+        """Send a list of actions to MicroRTS, given a state. Override this in
+           the super class.
+           
+           Be aware that, if `gameover = True`, the action provided will not be
+           processed by MicroRTS.
         """
         pass
 
