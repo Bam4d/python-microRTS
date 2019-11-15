@@ -1,8 +1,10 @@
+import json
+import random
+from collections import defaultdict
+
 import pyrts
 from pyrts import Server
-import json
-from collections import defaultdict
-import random
+
 
 class AI(Server):
     """
@@ -12,8 +14,8 @@ class AI(Server):
     def __init__(self):
         super(AI, self).__init__()
 
-    def get_unit_by_type(self, units, type):
-        return [unit for unit in units if unit['type'] == type]
+    def get_unit_by_type(self, units, unit_type):
+        return [unit for unit in units if unit['type'] == unit_type]
 
     def get_action(self, state, gameover):
 
@@ -81,17 +83,16 @@ class AI(Server):
         # If we dont have enought resources to run some commands, we remove those commands
         if potential_resource_usage > self.get_resources_for_player(state):
             for action in actions:
-                if action['unitAction']['type'] == pyrts.PRODUCE:
-                    action['unitAction'] = {'type': pyrts.NONE}
+                if action['unitAction']['type'] == pyrts.Action.PRODUCE:
+                    action['unitAction'] = {'type': pyrts.Action.NONE}
 
         # For busy units we need to just send NONE action (-1)
         for unit_id in busy_units:
-            actions.append({'unitID': unit_id, 'unitAction': {'type': pyrts.NONE}})
+            actions.append({'unitID': unit_id, 'unitAction': {'type': pyrts.Action.NONE}})
 
         return actions
 
-ai = AI()
 
 if __name__ == '__main__':
-    print('server is running')
+    ai = AI()
     ai.start()

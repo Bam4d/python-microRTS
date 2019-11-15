@@ -1,7 +1,9 @@
-from pyrts import Server
 import json
 from collections import defaultdict
-from random import randint
+from random import choice
+
+from pyrts import Server, Direction
+
 
 class AI(Server):
     """
@@ -11,8 +13,7 @@ class AI(Server):
     def __init__(self):
         super(AI, self).__init__()
 
-    def get_action(self, state):
-
+    def get_action(self, state,gameover):
         unit_by_player = defaultdict(list)
         for unit in state['pgs']['units']:
             unit_by_player[unit['player']].append(unit)
@@ -30,14 +31,13 @@ class AI(Server):
         if not unit_id:
             return []
 
-        unit_action = {'type': 1, 'parameter': randint(1,4)}
+        unit_action = {'type': 1, 'parameter': choice(Direction.as_list())}
         test_action = {'unitID': unit_id, 'unitAction': unit_action}
 
         return [test_action]
 
 
-ai = AI()
 
 if __name__ == '__main__':
-    print('server is running')
+    ai = AI()
     ai.start()
