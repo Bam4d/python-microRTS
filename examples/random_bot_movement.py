@@ -10,8 +10,8 @@ class AI(Server):
     Finds a single worker and moves it randomly
     """
 
-    def __init__(self):
-        super(AI, self).__init__()
+    def __init__(self, player_id):
+        super(AI, self).__init__(player_id)
 
     def get_action(self, state, gameover):
         unit_by_player = defaultdict(list)
@@ -26,7 +26,7 @@ class AI(Server):
         unit_id = None
         ## find a unit that we can move
         ## I AM PLAYER 1
-        for unit in unit_by_player[1]:
+        for unit in unit_by_player[self.player_id]:
             if unit['type'] == 'Worker':
                 unit_id = unit['ID']
 
@@ -41,5 +41,5 @@ class AI(Server):
 
 
 if __name__ == '__main__':
-    ai = AI()
+    ai = AI(0)
     ai.start()

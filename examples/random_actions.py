@@ -11,8 +11,8 @@ class AI(Server):
     Randomly selects actions for each unit
     """
 
-    def __init__(self):
-        super(AI, self).__init__()
+    def __init__(self, player_id):
+        super(AI, self).__init__(player_id)
 
     def get_unit_by_type(self, units, unit_type):
         return [unit for unit in units if unit['type'] == unit_type]
@@ -30,7 +30,7 @@ class AI(Server):
 
         ## I AM PLAYER 0
         actions = []
-        units = unit_by_player[0]
+        units = unit_by_player[self.player_id]
 
         # Gets all the units that are currently busy performing an action
         busy_units = self.get_busy_units(state)
@@ -90,5 +90,5 @@ class AI(Server):
 
 
 if __name__ == '__main__':
-    ai = AI()
+    ai = AI(0)
     ai.start()
