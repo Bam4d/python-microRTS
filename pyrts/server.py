@@ -83,13 +83,11 @@ class Server(object):
         pass
 
     def _process_state_and_get_action(self, state, gameover):
-        # TODO it would be nice if get_action is called when gameover == True,
-        # so that the controller can find out if it has won or lost
-        if gameover:
-            return None
-            
+        if not gameover:
+            self.get_grid_from_state(state)
+
         actions = self.get_action(state, gameover)
-        self.get_grid_from_state(state)
+
         return self._filter_invalid_actions(actions, state)
 
     def _wait_for_get_action(self):
