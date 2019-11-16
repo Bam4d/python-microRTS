@@ -109,6 +109,8 @@ class Server(object):
 
             return self._process_state_and_get_action(state, command[0] == 'gameOver')
 
+        else:
+            return []
 
     def _get_budgets(self):
         _, self._time_budget, self._iteration_budget = self._wait_for_message()[0].split()
