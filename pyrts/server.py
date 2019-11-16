@@ -392,6 +392,7 @@ class Server(object):
         # Get the headers
         self._get_budgets()
         self._get_utt()
+        self._get_budgets()
 
         gameover = False
 
