@@ -88,15 +88,16 @@ class Server(object):
 
         actions = self.get_action(state, gameover)
 
-        return self._filter_invalid_actions(actions, state)
+        if gameover:
+            return None
+        else:
+            return self._filter_invalid_actions(actions, state)
 
     def _wait_for_get_action(self):
         message_parts = self._wait_for_message()
         command = message_parts[0].split()
 
-        gameover = command[0] == 'gameOver'
-
-        if command[0] == 'getAction':
+        if command[0] in ['getAction', 'gameOver']:
             try:
                 state = json.loads(message_parts[1])
                 self._logger.debug('state: %s' % state)
@@ -106,7 +107,8 @@ class Server(object):
                 )
                 raise e
 
-            return self._process_state_and_get_action(state, gameover)
+            return self._process_state_and_get_action(state, command[0] == 'gameOver')
+
 
     def _get_budgets(self):
         _, self._time_budget, self._iteration_budget = self._wait_for_message()[0].split()
