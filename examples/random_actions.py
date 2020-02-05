@@ -1,25 +1,23 @@
+import json
+import random
+from collections import defaultdict
+
 import pyrts
 from pyrts import Server
-import json
-from collections import defaultdict
-import random
+
 
 class AI(Server):
     """
     Randomly selects actions for each unit
     """
 
-    def __init__(self):
-        super(AI, self).__init__()
+    def __init__(self, player_id):
+        super(AI, self).__init__(player_id)
 
-    def get_unit_by_type(self, units, type):
-        return [unit for unit in units if unit['type'] == type]
+    def get_unit_by_type(self, units, unit_type):
+        return [unit for unit in units if unit['type'] == unit_type]
 
     def get_action(self, state, gameover):
-
-        if gameover:
-            return []
-
         unit_type_table = self.get_unit_type_table()
 
         #self._logger.debug(json.dumps(unit_type_table, indent=1, separators=(',', ': ')))
@@ -32,7 +30,7 @@ class AI(Server):
 
         ## I AM PLAYER 0
         actions = []
-        units = unit_by_player[0]
+        units = unit_by_player[self.player_id]
 
         # Gets all the units that are currently busy performing an action
         busy_units = self.get_busy_units(state)
@@ -81,17 +79,16 @@ class AI(Server):
         # If we dont have enought resources to run some commands, we remove those commands
         if potential_resource_usage > self.get_resources_for_player(state):
             for action in actions:
-                if action['unitAction']['type'] == pyrts.PRODUCE:
-                    action['unitAction'] = {'type': pyrts.NONE}
+                if action['unitAction']['type'] == pyrts.Action.PRODUCE:
+                    action['unitAction'] = {'type': pyrts.Action.NONE}
 
         # For busy units we need to just send NONE action (-1)
         for unit_id in busy_units:
-            actions.append({'unitID': unit_id, 'unitAction': {'type': pyrts.NONE}})
+            actions.append({'unitID': unit_id, 'unitAction': {'type': pyrts.Action.NONE}})
 
         return actions
 
-ai = AI()
 
 if __name__ == '__main__':
-    print('server is running')
+    ai = AI(0)
     ai.start()
